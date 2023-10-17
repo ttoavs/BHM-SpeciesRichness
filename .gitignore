@@ -1,0 +1,19 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.DS_Store
+
+# File Structure
+# Excluded
+Data/Created/*
+Data/Downloaded/*
+Data/*
+Figures/*
+# Exceptions
+!Data/Created/.gitkeep
+!Data/Downloaded/.gitkeep
+!Data/.gitkeep
+!Data/Created
+!Data/Downloaded
+!Figures/.gitkeep
