@@ -31,29 +31,27 @@ dat_means$events_sim <- factor(dat_means$events_sim, labels = c("Low-Sampling","
 dat_means$nbinom_prob_sim <- factor(dat_means$nbinom_prob_sim)
 
 
-# dat_means <- dat_means %>%
-#   filter(events_sim != 20)
+
+ mean_diff_samplesize <- plot.df %>%
+  filter(method != "Naive") %>%
+  group_by(events_sim, richness_sim) %>%
+  summarise(mean = mean(diff))
+
+ ggplot(data = plot.df, aes(x=events_sim, y=diff)) +
+   geom_boxplot() 
+
+ mean_prec_samplesize <- dat_means %>%
+   filter(method != "Naive") %>%
+   group_by(events_sim, richness_sim) %>%
+   summarise(mean = mean(as.numeric(precision)))
+ 
+ ggplot(data = plot.df, aes(x=events_sim, y=precision)) +
+   geom_boxplot() 
 
 
-
-
-
-
-plot.df <- dat_means
-
-# plot.df <- plot.df %>%
-#   filter(richness_sim == "100")
-
-# plot.df <- plot.df %>%
-#   filter(events_sim == "10")
-
-# plot.df <- plot.df %>%
-#  filter(samples_sim == "100")
-
-# plot.df <- plot.df %>%
-#   filter(nbinom_prob_sim == "1")
-
-
+###############
+## Bar plots ##
+###############
 
 library(ggpubr)
 
@@ -67,6 +65,15 @@ ggplot(data = dat_recover) +
   facet_wrap(~richness_sim+events_sim) +
   theme_classic()
 
+###############
+###############
+###############
+
+#####################
+## Panel plot code ##
+#####################
+
+plot.df <- dat_means
 
 plot1 <- ggplot(data = plot.df, aes(x=richness_sim, y=diff, fill = method)) +
   geom_boxplot() +
@@ -76,8 +83,6 @@ plot1 <- ggplot(data = plot.df, aes(x=richness_sim, y=diff, fill = method)) +
   theme_classic(base_size = 16) +
   labs(x="", y = "Difference from truth", fill = "Estimator") +
   theme(axis.text.x = element_blank())
-
-
 
 plot2 <- ggplot(data = plot.df, aes(x=richness_sim, y=precision, fill = method)) +
   geom_boxplot() +
@@ -98,9 +103,11 @@ plot3 <- ggplot(data = plot.df, aes(x=richness_sim, y=w.diff, fill = method)) +
 
 panel_plot1 <- ggarrange(plot1, plot2, plot3, ncol = 1, common.legend = TRUE, legend="right")
 
-ggsave(panel_plot1, device="tiff", dpi=300, filename = "Figures/sim_panel_plot1.tiff", height = 8, width = 7)
+# ggsave(panel_plot1, device="tiff", dpi=300, filename = "Figures/sim_panel_plot1.tiff", height = 8, width = 7)
 
-
+#####################
+#####################
+#####################
 
 
 
