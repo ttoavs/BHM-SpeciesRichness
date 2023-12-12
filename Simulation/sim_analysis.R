@@ -31,6 +31,7 @@ dat_means$events_sim <- factor(dat_means$events_sim, labels = c("Low-Sampling","
 dat_means$nbinom_prob_sim <- factor(dat_means$nbinom_prob_sim)
 
 
+plot.df <- dat_means
 
  mean_diff_samplesize <- plot.df %>%
   filter(method != "Naive") %>%
@@ -75,35 +76,41 @@ ggplot(data = dat_recover) +
 
 plot.df <- dat_means
 
-plot1 <- ggplot(data = plot.df, aes(x=richness_sim, y=diff, fill = method)) +
+levels(plot.df$richness_sim) <- c("Low","Medium","High")
+
+plot1 <- ggplot(data = plot.df, aes(x=richness_sim, y=diff, fill = method, color = method)) +
   geom_boxplot() +
   geom_hline(yintercept = 0) +
   facet_wrap(~events_sim) +
-  scale_fill_manual(values=c("steelblue1", "steelblue", "red1", "red3","grey")) +
+  scale_color_manual(values=c("steelblue4", "steelblue", "red4", "red3", "grey50")) +
+  scale_fill_manual(values=c("steelblue2", "steelblue1", "red2", "red1", "grey")) +
   theme_classic(base_size = 16) +
   labs(x="", y = "Difference from truth", fill = "Estimator") +
+  guides(color="none") +
   theme(axis.text.x = element_blank())
 
-plot2 <- ggplot(data = plot.df, aes(x=richness_sim, y=precision, fill = method)) +
+plot2 <- ggplot(data = plot.df, aes(x=richness_sim, y=precision, fill = method, color = method)) +
   geom_boxplot() +
   facet_wrap(~events_sim) +
-  scale_fill_manual(values=c("steelblue1", "steelblue", "red1", "red3")) +
+  scale_color_manual(values=c("steelblue4", "steelblue", "red4", "red3"), ) +
+  scale_fill_manual(values=c("steelblue2", "steelblue1", "red2", "red1")) +
   theme_classic(base_size = 16) +
   labs(x="", y="Error Range", fill = "Estimator") +
   theme(axis.text.x = element_blank(), legend.position="none", strip.text.x = element_blank())
 
-plot3 <- ggplot(data = plot.df, aes(x=richness_sim, y=w.diff, fill = method)) +
+plot3 <- ggplot(data = plot.df, aes(x=richness_sim, y=w.diff, fill = method, color = method)) +
   geom_boxplot() +
   geom_hline(yintercept = 0) +
   facet_wrap(~events_sim) +
-  scale_fill_manual(values=c("steelblue1", "steelblue", "red1", "red3")) +
+  scale_color_manual(values=c("steelblue4", "steelblue", "red4", "red3")) +
+  scale_fill_manual(values=c("steelblue2", "steelblue1", "red2", "red1")) +
   theme_classic(base_size = 16) +
-  labs(x="", y = "Weighted Difference", fill = "Estimator") +
-  theme(legend.position="none", strip.text.x = element_blank(), axis.text.x = element_text(angle = 25, vjust = .6, hjust=.50)); plot3
+  labs(x="Richness", y = "Weighted Difference", fill = "Estimator") +
+  theme(legend.position="none", strip.text.x = element_blank()); plot3
 
-panel_plot1 <- ggarrange(plot1, plot2, plot3, ncol = 1, common.legend = TRUE, legend="right")
+panel_plot1 <- ggarrange(plot1, plot2, plot3, ncol = 1, common.legend = TRUE, legend="right", labels = c("A","B","C"), hjust = -2.25, font.label = list(face = "bold", color = "black"), align = "v"); panel_plot1
 
-# ggsave(panel_plot1, device="tiff", dpi=300, filename = "Figures/sim_panel_plot1.tiff", height = 8, width = 7)
+ggsave(panel_plot1, device="tiff", dpi=300, filename = "Figures/sim_panel_plot1_V2.tiff", height = 8.25, width = 7.25)
 
 #####################
 #####################
