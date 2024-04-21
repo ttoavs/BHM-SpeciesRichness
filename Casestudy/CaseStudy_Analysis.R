@@ -1,37 +1,48 @@
 library(tidyverse)
 
+# read in outputs
 out_con <- readRDS("Data/Created/out_conventional.RDS")
 out_jags <-readRDS("Data/Created/out_JAGS.RDS")
 
+# drop huc2s
 out_jags <- out_jags %>%
   select(-HUC_2)
 
+# only keep huc8s were there are estimate from both estimators
 out_con <- out_con %>%
   filter(HUC_8 %in% unique(out_jags$HUC_8))
 
-
+# bind to one df
 dat <- rbind(out_con, out_jags)
 
+# filter methods
 dat <- dat %>%
   filter(method %in% c("BMM","Chao"))
 
+# rearrange columns
 dat <- dat %>%
   select(method, HUC_8, everything())
 
+# pivot df
 dat_wide <- dat %>%
   pivot_wider(names_from = method, values_from = c(3:6))
 
+# set to numeric values
 dat[,3:8] <- apply(dat[,3:8], 2, as.numeric)
 
+# same for pivoted df
 dat_wide[,2:11] <- apply(dat_wide[,2:11], 2, as.numeric)
 
+# calc error range
 dat <- dat %>% 
   mutate(error_range = upper95-lower95)
 
+# calc diff and direction
 dat_wide <- dat_wide %>%
   mutate(diff = est_BMM - est_Chao,
          direction = ifelse(diff>1,1,0))
 
+# means
 mean(dat_wide$est_Chao)
 mean(dat_wide$sd_Chao)
 mean(dat_wide$est_BMM)
@@ -39,7 +50,7 @@ mean(dat_wide$sd_BMM)
 
 
 
-
+# Below are the plots prepared for the manuscript
 
 plot1 <- ggplot(data = dat) +
   geom_point(aes(x=events, y=est, color = method, alpha = .15)) +

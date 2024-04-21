@@ -17,3 +17,5 @@ Figures/*
 !Data/Created
 !Data/Downloaded
 !Figures/.gitkeep
+!Data/Created/CS_dat_BHM.RDS
+!Data/Created/CS_dat_con.RDS

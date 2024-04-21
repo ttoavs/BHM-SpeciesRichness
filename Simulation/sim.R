@@ -55,7 +55,7 @@ Jack1=function(matrix){
 }
 
 # BMM
-sink("New Sim/BMM.txt")
+sink("Data/Created/BMM.txt")
 cat("
 model {
 
@@ -88,7 +88,7 @@ for (j in 1:J) {
 sink()
 
 # BNE
-sink("New Sim/BNE.txt")
+sink("Data/Created/BNE.txt")
 cat("
 model {
 
@@ -185,7 +185,8 @@ inits <- function(){list(mu.a = rnorm(1, 50, 0),
 # params to save
 params1 <- c("mu.a", "mu.b","sigma.y","sigma.b","sigma.a","a","b")
 nt <- 5 # thining
-nb <- 1000 # burnin
+nb <- 2000 # burnin
+ni <- 10000 # iters
 nc <- 3 # chains
 
 # Set progress bar
@@ -201,11 +202,17 @@ pb <- progress_bar$new(format = "(:spin) [:bar] :percent [Elapsed time: :elapsed
 
 dat_final <- list()
 iter <- 0
+iter_per_BHM <- c()
 
+# Main loop to run all simulation setting and replicates.
+# Each nested loop iterates through simulation setting to give each combination. 
+# Note: adding simulation setting will exponentially add time to run program. 
+start <- Sys.time() 
 for(i in richness_vec) {
   for(j in samples_vec) {
     for(z in sampling_event_vec) {
       for(t in nbinom_size) {
+        # Create df of true values
         true_df <- data.frame(cbind(
           true=rpois(site_num, i), 
           site=seq(1,site_num,1),
@@ -215,14 +222,17 @@ for(i in richness_vec) {
           nbinom_prob = .1
         ))
        
+        # Calc probabilities
         probs <- lapply(true_df$true, get_probs)
         for(f in 1:site_num){
           probs[[f]] <- append(true_df$samples_per_event[f], probs[[f]])
           probs[[f]] <- append(true_df$sampling_events[f], probs[[f]])
         }
         
+        # Sim repilcated sampling
         replicated_samples <- lapply(probs, replicate_sampling)
         
+        # Reformat
         reformated <- lapply(replicated_samples, function(x) lapply(x, replicate_format))
         reformated2 <- list()
         for(f in 1:site_num){
@@ -231,6 +241,7 @@ for(i in richness_vec) {
         }
         dat <- bind_rows(reformated2, .id = "site")
         
+        # Calc Chao
         chao_est <- lapply(replicated_samples, function(x) lapply(x, Chao))
         reformated2 <- list()
         for(f in 1:site_num){
@@ -239,7 +250,7 @@ for(i in richness_vec) {
         }
         chao_est_df <- bind_rows(reformated2, .id = "site")
         chao_est_df$method <- "Chao"
-        
+        # Calc Jack
         jack_est <- lapply(replicated_samples, function(x) lapply(x, Jack1))
         reformated2 <- list()
         for(f in 1:site_num){
@@ -259,11 +270,11 @@ for(i in richness_vec) {
           mutate(sd = NA, upper95 = NA, lower95 = NA, method = "Naive")
         
         
-        
+        # Create empty lists to store BHM estimates
         MM_est_df <- list()
         NE_est_df <- list()
         
-        
+        # Another nested loop to run BHM program on all replicates
         for(f in 1:replicates) {
           mod.df <- dat %>%
             filter(replicate == f)
@@ -272,22 +283,27 @@ for(i in richness_vec) {
                        site = as.numeric(mod.df$site),
                        n = nrow(mod.df),
                        J = length(unique(mod.df$site)))
-          out_MM <- autojags(data = data,
-                             inits = inits,
-                             parameters.to.save = params1,
-                             model.file = "New Sim/BMM.txt",
-                             n.chains = nc,
-                             n.thin = nt,
-                             n.burnin = nb,
-                             verbose = FALSE)
-          out_NE <- autojags(data = data,
-                             inits = inits,
-                             parameters.to.save = params1,
-                             model.file = "New Sim/BNE.txt",
-                             n.chains = nc,
-                             n.thin = nt,
-                             n.burnin = nb,
-                             verbose = FALSE)
+          out_MM <- jags(data = data,
+                         inits = inits,
+                         parameters.to.save = params1,
+                         model.file = "Data/Created/BMM.txt",
+                         n.chains = nc,
+                         n.thin = nt,
+                         n.burnin = nb,
+                         n.iter = ni,
+                         verbose = FALSE)
+          out_NE <- jags(data = data,
+                         inits = inits,
+                         parameters.to.save = params1,
+                         model.file = "Data/Created/BNE.txt",
+                         n.chains = nc,
+                         n.thin = nt,
+                         n.burnin = nb,
+                         n.iter = ni,
+                         verbose = FALSE)
+          iter_per_BHM <- append(iter_per_BHM, length(out_NE$sims.list$mu.a))
+          iter_per_BHM <- append(iter_per_BHM, length(out_MM$sims.list$mu.a))
+          # Store Data
           MM_est_df[[f]] <- data.frame(cbind(
             est = out_MM$mean$a,
             sd = out_MM$sd$a,
@@ -297,6 +313,7 @@ for(i in richness_vec) {
             lower95 = out_MM$q2.5$a,
             method = "BMM"
           ))
+          # Store Data
           NE_est_df[[f]] <- data.frame(cbind(
             est = out_NE$mean$a,
             sd = out_NE$sd$a,
@@ -310,6 +327,7 @@ for(i in richness_vec) {
         MM_est_df <- bind_rows(MM_est_df)
         NE_est_df <- bind_rows(NE_est_df)
         
+        # Combine all data for simulation setting
         dat_all_df <- rbind(MM_est_df, NE_est_df, chao_est_df, jack_est_df, Naive_est_df)
         dat_all_df[,1:6] <- apply(dat_all_df[,1:6], 2, as.numeric)
         dat_all_df <- merge(dat_all_df, true_df[,1:2], by = "site")
@@ -318,16 +336,22 @@ for(i in richness_vec) {
         dat_all_df$events_sim <- z
         dat_all_df$nbinom_prob_sim <- t
         
+        # increase iteration
         iter <- iter + 1
+        # Store data
         dat_final[[iter]] <- dat_all_df
+        #Tick progress bar
         pb$tick()
       }
     }
   }
 }
+end <- Sys.time() 
+# Calc total runtime
+time <- end-start
 
-test <- bind_rows(dat_final)
+# bind to df
+dat_final <- bind_rows(dat_final)
 
-
-saveRDS(dat_final, "data/Created/sim_data.RDS")
-
+# Save output
+#saveRDS(dat_final, "data/Created/sim_data.RDS")

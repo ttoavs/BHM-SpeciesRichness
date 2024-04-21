@@ -1,5 +1,9 @@
+# Included is the code to analyze the simulation results.
+# Also included is code to prepare figures for the manuscript.
+
 library(tidyverse)
 
+# read in results
 all_sim <- readRDS("data/Created/sim_data.RDS")
 
 dat <- bind_rows(all_sim)
@@ -74,6 +78,12 @@ ggplot(data = dat_recover) +
 ## Panel plot code ##
 #####################
 
+
+
+
+
+
+
 plot.df <- dat_means
 
 levels(plot.df$richness_sim) <- c("Low","Medium","High")
@@ -89,11 +99,33 @@ plot1 <- ggplot(data = plot.df, aes(x=richness_sim, y=diff, fill = method, color
   guides(color="none") +
   theme(axis.text.x = element_blank())
 
+plot1b <- ggplot(data = plot.df, aes(x=richness_sim, y=diff, fill = method, color = method)) +
+  geom_boxplot() +
+  geom_hline(yintercept = 0) +
+  facet_wrap(~events_sim) +
+  scale_color_manual(values=c("#4B4B61", "#49585F", "#564444", "#8C594A", "grey50")) +
+  scale_fill_manual(values=c("#0000FF", "#00B7FF", "#A50000", "#FF9D81", "grey")) +
+  theme_classic(base_size = 16) +
+  labs(x="", y = "Difference from truth", fill = "Estimator") +
+  guides(color="none") +
+  theme(axis.text.x = element_blank())
+
+#9AEAFF
+
 plot2 <- ggplot(data = plot.df, aes(x=richness_sim, y=precision, fill = method, color = method)) +
   geom_boxplot() +
   facet_wrap(~events_sim) +
   scale_color_manual(values=c("steelblue4", "steelblue", "red4", "red3"), ) +
   scale_fill_manual(values=c("steelblue2", "steelblue1", "red2", "red1")) +
+  theme_classic(base_size = 16) +
+  labs(x="", y="Error Range", fill = "Estimator") +
+  theme(axis.text.x = element_blank(), legend.position="none", strip.text.x = element_blank())
+
+plot2b <- ggplot(data = plot.df, aes(x=richness_sim, y=precision, fill = method, color = method)) +
+  geom_boxplot() +
+  facet_wrap(~events_sim) +
+  scale_color_manual(values=c("#4B4B61", "#49585F", "#564444", "#8C594A")) +
+  scale_fill_manual(values=c("#0000FF", "#00B7FF", "#A50000", "#FF9D81")) +
   theme_classic(base_size = 16) +
   labs(x="", y="Error Range", fill = "Estimator") +
   theme(axis.text.x = element_blank(), legend.position="none", strip.text.x = element_blank())
@@ -106,11 +138,25 @@ plot3 <- ggplot(data = plot.df, aes(x=richness_sim, y=w.diff, fill = method, col
   scale_fill_manual(values=c("steelblue2", "steelblue1", "red2", "red1")) +
   theme_classic(base_size = 16) +
   labs(x="Richness", y = "Weighted Difference", fill = "Estimator") +
-  theme(legend.position="none", strip.text.x = element_blank()); plot3
+  theme(legend.position="none", strip.text.x = element_blank())
+
+plot3b <- ggplot(data = plot.df, aes(x=richness_sim, y=w.diff, fill = method, color = method)) +
+  geom_boxplot() +
+  geom_hline(yintercept = 0) +
+  facet_wrap(~events_sim) +
+  scale_color_manual(values=c("#4B4B61", "#49585F", "#564444", "#8C594A")) +
+  scale_fill_manual(values=c("#0000FF", "#00B7FF", "#A50000", "#FF9D81")) +
+  theme_classic(base_size = 16) +
+  labs(x="Richness", y = "Weighted Difference", fill = "Estimator") +
+  theme(legend.position="none", strip.text.x = element_blank())
 
 panel_plot1 <- ggarrange(plot1, plot2, plot3, ncol = 1, common.legend = TRUE, legend="right", labels = c("A","B","C"), hjust = -2.25, font.label = list(face = "bold", color = "black"), align = "v"); panel_plot1
 
-ggsave(panel_plot1, device="tiff", dpi=300, filename = "Figures/sim_panel_plot1_V2.tiff", height = 8.25, width = 7.25)
+panel_plot1b <- ggarrange(plot1b, plot2b, plot3b, ncol = 1, common.legend = TRUE, legend="right", labels = c("A","B","C"), hjust = -2.25, font.label = list(face = "bold", color = "black"), align = "v"); panel_plot1
+
+#ggsave(panel_plot1, device="tiff", dpi=300, filename = "Figures/sim_panel_plot1_V2.tiff", height = 8.25, width = 7.25)
+
+#ggsave(panel_plot1b, device="tiff", dpi=300, filename = "Figures/sim_panel_plot1_V3.tiff", height = 8.25, width = 7.25)
 
 #####################
 #####################

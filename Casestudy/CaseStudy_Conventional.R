@@ -1,22 +1,10 @@
-# Load libraries ----
+# Load libraries
 library(tidyverse)
 library(progress)
 library(sf)
 
-# Read in the data ----
-fish <- readRDS("Data/Downloaded/dataset_complete_2023-08-16.rds")
-
-
-
-# Data manipulation ----
-df <- fish %>%
-  drop_na(Date, X, Y, HUC_8) %>% # filter NA's
-  filter(Year >= 2010) %>% # filter date 
-  mutate(sampleId = paste(COMID, Date, Prim_Gear, sep = "_")) %>% # create sampling ID
-  group_by(HUC_8) %>% # Group data by HUC8 
-  mutate(Date = as.Date(Date, format = "%Y-%m-%d")) %>%
-  arrange(Date) %>% # arranging in order of Data
-  mutate(eventNum = match(sampleId, unique(sampleId))) # Count by unique sampleID in each HU8
+# Read in prepped data
+df <- readRDS("Data/Created/CS_dat_con.RDS")
 
 
 # Estimator functions ----
@@ -66,7 +54,7 @@ Jack1=function(matrix){
 }
 
 
-# Set up ----
+# Set up
 
 # DF to store the estimates
 estimates.df <- list() 
@@ -81,7 +69,7 @@ pb <- progress_bar$new(format = "(:spin) [:bar] :percent [Elapsed time: :elapsed
                        clear = FALSE,   
                        width = 100)
 
-# Main ----
+# Main loop
 for(i in 1:length(huc_vec)){ # Loop with each iteration corresponding to each HUC8
   dat <- df %>%
     filter(HUC_8 %in% huc_vec[i])
@@ -118,8 +106,6 @@ for(i in 1:length(huc_vec)){ # Loop with each iteration corresponding to each HU
   pb$tick() # tick over progress bar
 }
 
-
 final <- bind_rows(estimates.df)
-
 
 saveRDS(final, "Data/Created/out_conventional.RDS")

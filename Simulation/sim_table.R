@@ -1,6 +1,9 @@
 library(tidyverse)
 library(gt)
 
+# Code to prepare table for publication
+
+
 all_sim <- readRDS("data/Created/sim_data.RDS")
 
 dat <- bind_rows(all_sim)
