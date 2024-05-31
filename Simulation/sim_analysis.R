@@ -31,7 +31,7 @@ dat_means$method <- factor(dat_means$method, levels = c("BMM", "BNE", "Chao", "J
 dat_means$site <- factor(dat_means$site)
 dat_means$richness_sim <- factor(dat_means$richness_sim, labels = c("Low-Richness","Medium-Richness","High-Richness"))
 dat_means$samples_sim <- factor(dat_means$samples_sim)
-dat_means$events_sim <- factor(dat_means$events_sim, labels = c("Low-Sampling","Medium-Sampling","High-Sampling"))
+dat_means$events_sim <- factor(dat_means$events_sim, labels = c("Low-Sampling","Moderate-Sampling","Intense-Sampling"))
 dat_means$nbinom_prob_sim <- factor(dat_means$nbinom_prob_sim)
 
 
