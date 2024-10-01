@@ -4,16 +4,10 @@ library(gt)
 # Code to prepare table for publication
 
 
-all_sim <- readRDS("data/Created/sim_data.RDS")
+all_sim <- readRDS("data/Created/sim_revision_data.RDS")
 
 dat <- bind_rows(all_sim)
 
-
-test <- dat %>%
-  group_by(method, richness_sim, events_sim, site) %>%
-  summarise(mean((est-true)^2)^(1/2))
-
-test$est-test$true^2
 
 
 dat_means <- dat %>%
@@ -44,7 +38,7 @@ dat_means$events_sim[dat_means$events_sim == 10] <- "Medium"
 dat_means$events_sim[dat_means$events_sim == 5] <- "Low"
 
 
-dat_means$method <- factor(dat_means$method, levels = c("BMM", "BNE", "Chao", "Jack","Naive"))
+dat_means$method <- factor(dat_means$method, levels = c("BMM", "BNE", "Chao", "Jack","CMAX","Naive"))
 dat_means$richness_sim <- factor(dat_means$richness_sim, levels = c('Low','Medium','High'))
 dat_means$events_sim <- factor(dat_means$events_sim, levels = c('Low','Medium','High'))
 
@@ -60,8 +54,40 @@ ROUND <- function(vec) {
   round(vec, 2)
 }
 
-table[,4:7] <- apply(table[,4:7], 2, ROUND)
+table[,4:8] <- apply(table[,4:8], 2, ROUND)
 
-colnames(table) <- c("Richness Scenario","Events Scenario","Estimator","Difference from truth","Error range","Weighted Difference","Percent recovered")
+colnames(table) <- c("Richness Scenario","Events Scenario","Estimator","Difference from truth","Error range","Weighted Difference","Percent recovered","RMSE")
 
-write.csv(table, "Data/Created/sim_table.csv", row.names = FALSE)
+#write.csv(table, "Data/Created/sim_table_revision.csv", row.names = FALSE)
+
+
+
+# Metric evaluation
+
+# Accuracy
+accuracy_by_sim <- table %>%
+  group_by(`Richness Scenario`, `Events Scenario`) %>%
+  slice(which.min(abs(`Difference from truth`))) %>%
+  ungroup()
+
+# table with the count of which estimators were closest to the truth 
+table(accuracy_by_sim$Estimator, accuracy_by_sim$`Richness Scenario`, accuracy_by_sim$`Events Scenario`)
+
+
+weighted_diff_by_sim <- table %>%
+  group_by(`Richness Scenario`, `Events Scenario`) %>%
+  slice(which.min(abs(`Weighted Difference`))) %>%
+  ungroup()
+
+
+rmse_by_sim <- table %>%
+  group_by(`Richness Scenario`, `Events Scenario`) %>%
+  slice(which.min(abs(RMSE))) %>%
+  ungroup()
+
+
+
+
+
+
+

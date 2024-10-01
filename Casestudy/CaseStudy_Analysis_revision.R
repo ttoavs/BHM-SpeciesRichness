@@ -1,12 +1,12 @@
 library(tidyverse)
 
 # read in outputs
-out_con <- readRDS("Data/Created/out_conventional.RDS")
+out_con <- readRDS("Data/Created/out_conventional_revision.RDS")
 out_jags <-readRDS("Data/Created/out_JAGS.RDS")
 
 # drop huc2s
 out_jags <- out_jags %>%
-  select(-HUC_2)
+  dplyr::select(-HUC_2)
 
 # only keep huc8s were there are estimate from both estimators
 out_con <- out_con %>%
@@ -17,11 +17,11 @@ dat <- rbind(out_con, out_jags)
 
 # filter methods
 dat <- dat %>%
-  filter(method %in% c("BMM","Chao"))
+  filter(method %in% c("BMM","CMAX"))
 
 # rearrange columns
 dat <- dat %>%
-  select(method, HUC_8, everything())
+  dplyr::select(method, HUC_8, everything())
 
 # pivot df
 dat_wide <- dat %>%
@@ -39,12 +39,12 @@ dat <- dat %>%
 
 # calc diff and direction
 dat_wide <- dat_wide %>%
-  mutate(diff = est_BMM - est_Chao,
+  mutate(diff = est_BMM - est_CMAX,
          direction = ifelse(diff>1,1,0))
 
 # means
-mean(dat_wide$est_Chao)
-mean(dat_wide$sd_Chao)
+mean(dat_wide$est_CMAX)
+mean(dat_wide$sd_CMAX)
 mean(dat_wide$est_BMM)
 mean(dat_wide$sd_BMM)
 
@@ -117,18 +117,3 @@ panel_plot2 <- ggarrange(plot2, plot4, plot6, ncol = 1, nrow = 3, common.legend 
 #ggsave(panel_plot1, device="tiff", dpi=300, filename = "Figures/fishscales_panel_plot_v2.tiff", height = 8.25, width = 7)
 
 #ggsave(panel_plot2, device="tiff", dpi=300, filename = "Figures/fishscales_panel_plot2_v2.tiff", height = 8.25, width = 7)
-
-
-
-test <- dat %>%
-  filter(method == "BMM",
-         round(est,0) < naive) %>%
-  mutate(species_lower = naive-round(est,0))
-
-
-table(test$species_lower)
-
-
-
-51/746
-
