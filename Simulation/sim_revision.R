@@ -3,7 +3,6 @@ library(jagsUI)
 library(progress)
 
 
-
 ######################
 ##### Functions  #####
 ######################

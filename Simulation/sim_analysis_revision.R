@@ -28,7 +28,13 @@ dat_means <- dat_means %>%
          precision = mean_upper-mean_lower,
          w.diff = diff * (1/mean_sd))
 
-dat_means$method <- factor(dat_means$method, levels = c("BMM", "BNE", "Chao", "Jack","CMAX","Naive"))
+
+# relabel CMAX
+dat_means <- dat_means %>%
+  mutate(method = recode(method, "CMAX" = "Ŝ(Cmax)"))
+
+
+dat_means$method <- factor(dat_means$method, levels = c("BMM", "BNE", "Chao", "Jack","Ŝ(Cmax)","Naive"))
 dat_means$site <- factor(dat_means$site)
 dat_means$richness_sim <- factor(dat_means$richness_sim, labels = c("Low-Richness","Medium-Richness","High-Richness"))
 dat_means$samples_sim <- factor(dat_means$samples_sim)
@@ -157,7 +163,7 @@ panel_plot1b <- ggarrange(plot1b, plot2b, plot3b, ncol = 1, common.legend = TRUE
 
 #ggsave(panel_plot1, device="tiff", dpi=300, filename = "Figures/sim_panel_plot1_V2.tiff", height = 8.25, width = 7.25)
 
-ggsave(panel_plot1b, device="tiff", dpi=300, filename = "Figures/sim_panel_plot1_V3_revision.tiff", height = 8.25, width = 7.25)
+ggsave(panel_plot1b, device="tiff", dpi=300, filename = "Figures/sim_panel_plot1_V3_revision_07262026.tiff", height = 8.25, width = 7.25)
 
 #####################
 #####################
